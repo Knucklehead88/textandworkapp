@@ -1,0 +1,116 @@
+﻿@page "/Account/Manage/SaveCard"
+@using System.Text.Json
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.Extensions.Options
+@using TextAndWorkApp.Data
+@using TextAndWorkApp.Services
+@inject StripeService StripeService
+@inject IOptions<StripeSettings> StripeSettings
+@inject NavigationManager NavigationManager
+@inject UserManager<ApplicationUser> UserManager
+@inject IHttpClientFactory HttpClientFactory
+@inject IJSRuntime _JSRuntime
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IConfiguration Config
+@attribute [Authorize]
+@rendermode InteractiveServer
+
+
+<PageTitle>Payment Methods - Text & Work</PageTitle>
+
+<h3>Payment Methods</h3>
+<hr />
+
+<div class="card-container">
+@if (!isCardAdded)
+{
+    <div class="card-form">
+        <h2>Add Payment Method</h2>
+        <div id="card-element"></div>
+        <div id="card-errors" role="alert"></div>
+        <button class="submit-button" @onclick="HandleSubmit">Add Card</button>
+    </div>
+}
+else
+{
+    <div class="added-card">
+        <h2>Card Added Successfully</h2>
+        <div class="card-info">
+            <span class="card-brand">@cardBrand</span>
+            <span class="card-last4">•••• @cardLast4</span>
+        </div>
+        <button class="add-new-card" @onclick="ResetForm">Add Another Card</button>
+    </div>
+}
+</div>
+
+@code {
+    private string clientSecret;
+    private bool isSaving;
+    private ApplicationUser? currentUser;
+    private bool isStripeInitialized = false;
+    private string stripePublicKey;
+    private bool isCardAdded = false;
+    private string cardBrand;
+    private string cardLast4;
+    
+    // Add this property to track first render
+    // private bool firstRender = true;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            // this.firstRender = false;
+            
+            await InitializeStripe();
+            
+            // Update UI if needed
+            StateHasChanged();
+        }
+    }
+    
+    
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // Get the ApplicationUser from the UserManager using the ClaimsPrincipal
+        currentUser = await UserManager.GetUserAsync(user);
+        stripePublicKey= StripeSettings.Value.PublishableKey;
+
+    }
+
+    private async Task HandleSubmit()
+    {
+        var result = await _JSRuntime.ConfirmCardSetup(clientSecret);
+        if (!string.IsNullOrEmpty(result))
+        {
+            var paymentMethod = await StripeService.GetPaymentMethodAsync(result);
+            isCardAdded = true;
+            cardBrand = paymentMethod.Card.Brand;
+            cardLast4 = paymentMethod.Card.Last4;
+            StateHasChanged();
+        }
+    }
+    
+    private async Task ResetForm()
+    {
+        isCardAdded = false;
+        // await CreateSetupIntent();
+        await _JSRuntime.ResetStripeElement();
+        StateHasChanged();
+    }
+    
+    private async Task InitializeStripe()
+    {
+        // Initialize Stripe in the browser
+        await _JSRuntime.InitializeStripe(stripePublicKey);
+        
+        // Create a setup intent and get client secret
+        clientSecret = await StripeService.CreateSetupIntentAsync(currentUser?.StripeCustomerId);
+    }
+
+}
