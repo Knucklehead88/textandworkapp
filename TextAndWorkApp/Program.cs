@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using MudBlazor.Services;
 using TextAndWorkApp;
 using TextAndWorkApp.Components;
 using TextAndWorkApp.Components.Account;
@@ -56,6 +57,15 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+builder.Services.AddMudServices();
+
+
+// Also add OpenAI configuration
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<OpenAIService>();
+
+
 
 // Stripe API key
 builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));

@@ -1,0 +1,151 @@
+﻿@page "/chat"
+@rendermode InteractiveServer
+@using MudBlazor
+@using TextAndWorkApp.Models
+@using TextAndWorkApp.Services
+@inject OpenAIService OpenAIService
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+<PageTitle>AI Chat Assistant</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
+    <MudPaper Elevation="3" Class="pa-4">
+        <MudText Typo="Typo.h4" Class="mb-4">AI Chat Assistant</MudText>
+        
+        <MudPaper Elevation="0" Class="d-flex flex-column" Style="height: 100%;">
+            @if (messages.Count == 0)
+            {
+                <MudText Typo="Typo.body1" Class="mx-auto my-auto text-secondary">
+                    Start a conversation with the AI assistant!
+                </MudText>
+            }
+            else
+            {
+                <MudStack>
+                    @foreach (var message in messages)
+                    {
+                        <MudChat UserName="@message.Username"
+                                 MessageContent="@message.Message"
+                                 UserAvatar="@(message.IsFromUser ? "_content/MudBlazor/MudBlazor-Avatar-User.png" : "_content/MudBlazor/MudBlazor-Avatar-Bot.png")"
+                                 IsFromUser="@message.IsFromUser"
+                                 Class="@(message.IsFromUser ? "ml-auto" : "mr-auto")"
+                                 Style="max-width: 80%;">
+                            <FooterContent>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                    @message.Timestamp.ToString("g")
+                                </MudText>
+                            </FooterContent>
+                        </MudChat>
+                    }
+                </MudStack>
+            }
+        </MudPaper>
+
+        <MudPaper Elevation="0" Class="d-flex align-center mt-4">
+            <MudTextField @bind-Value="userInput" 
+                         Label="Ask a question..." 
+                         Variant="Variant.Outlined"
+                         Adornment="Adornment.End" 
+                         AdornmentIcon="@Icons.Material.Filled.Send"
+                         OnAdornmentClick="SendMessage"
+                         OnKeyPress="HandleKeyPress"
+                         Class="flex-grow-1 mr-2"
+                         Disabled="@isLoading" />
+                         
+            <MudButton Variant="Variant.Filled" 
+                      Color="Color.Primary" 
+                      EndIcon="@Icons.Material.Filled.Send" 
+                      OnClick="SendMessage"
+                      Disabled="@isLoading">
+                Send
+            </MudButton>
+        </MudPaper>
+        
+        @if (isLoading)
+        {
+            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-2" />
+        }
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<ChatMessage> messages = new();
+    private string userInput = string.Empty;
+    private bool isLoading = false;
+    private ElementReference _chatContainer;
+    
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrWhiteSpace(userInput))
+            return;
+            
+        var userMessage = new ChatMessage
+        {
+            Username = "You",
+            Message = userInput,
+            IsFromUser = true
+        };
+        
+        messages.Add(userMessage);
+        var query = userInput;
+        userInput = string.Empty;
+        
+        try
+        {
+            isLoading = true;
+            StateHasChanged();
+            await ScrollToBottom();
+            
+            var response = await OpenAIService.GetCompletionAsync(query);
+            
+            messages.Add(new ChatMessage
+            {
+                Username = "AI Assistant",
+                Message = response,
+                IsFromUser = false
+            });
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Error getting response: " + ex.Message, Severity.Error);
+            
+            messages.Add(new ChatMessage
+            {
+                Username = "AI Assistant",
+                Message = "Sorry, I encountered an error processing your request.",
+                IsFromUser = false
+            });
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+            await ScrollToBottom();
+        }
+    }
+    
+    private async Task HandleKeyPress(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" && !isLoading)
+        {
+            await SendMessage();
+        }
+    }
+    
+    private async Task ScrollToBottom()
+    {
+        await Task.Delay(50); // Small delay to ensure DOM is updated
+        await JS.InvokeVoidAsync("scrollToBottom", _chatContainer);
+    }
+    
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("window.addJsFunction", "scrollToBottom", DotNetObjectReference.Create(this));
+        }
+        
+        await base.OnAfterRenderAsync(firstRender);
+    }
+}
