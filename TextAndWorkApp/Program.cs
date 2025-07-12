@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Components.Server;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using MudBlazor.Services;
@@ -48,7 +49,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.RequireConfirmedAccount = true)
@@ -73,6 +74,14 @@ var stripeSettings = builder.Configuration.GetSection("Stripe").Get<StripeSettin
 Stripe.StripeConfiguration.ApiKey = stripeSettings.SecretKey;
 
 builder.Services.AddScoped<StripeService>();
+
+//for sending emails
+builder.Services.AddSingleton(new EmailService(
+    apiKey: builder.Configuration["SendGrid:ApiKey"],
+    fromEmail: "silvii.silvester@gmail.com",
+    fromName: "TextAndWork"
+));
+
 
 var app = builder.Build();
 

@@ -1,0 +1,89 @@
+﻿@page "/test"
+@using MudBlazor
+
+<MudLayout>
+    <MudAppBar Elevation="0" Color="Color.Primary" Class="px-6 py-2">
+        <MudText Typo="Typo.h6" Class="font-bold">SaaS Product</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Text" Color="Color.Inherit">Features</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Inherit">Pricing</MudButton>
+        <MudButton Variant="Variant.Text" Color="Color.Inherit">About</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Secondary" Class="ml-3">Get Started</MudButton>
+    </MudAppBar>
+
+    <MudContainer MaxWidth="MaxWidth.Large" Class="mt-12">
+        <!-- HERO SECTION -->
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudText Typo="Typo.h2" Class="font-bold mb-4">Grow your business with <span style="color:#8b5cf6;">SaaS Product</span></MudText>
+                <MudText Typo="Typo.subtitle1" Class="mb-4">Modern, powerful, and scalable cloud platform to accelerate your workflow and delight your users.</MudText>
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Large">Start Free Trial</MudButton>
+                <MudButton Variant="Variant.Outlined" Color="Color.Secondary" Size="Size.Large" Class="ml-3">Learn More</MudButton>
+            </MudItem>
+            <MudItem xs="12" md="6" Class="flex justify-center">
+                <img src="https://images.unsplash.com/photo-1461749280684-dccba630e2f6?auto=format&fit=crop&w=700&q=80"
+                     alt="Dashboard preview"
+                     style="border-radius: 1rem; box-shadow: 0 8px 24px rgba(0,0,0,0.1); width: 90%; max-width: 420px;" />
+            </MudItem>
+        </MudGrid>
+
+        <!-- FEATURES SECTION -->
+        <MudText Typo="Typo.h4" Class="mt-16 mb-8 text-center font-bold">Features</MudText>
+        <MudGrid Gutter="16">
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="3" Class="p-6 text-center rounded-xl">
+                    <MudIcon Icon="@Icons.Material.Filled.Cloud" Size="Size.Large" Color="Color.Primary" />
+                    <MudText Typo="Typo.h6" Class="font-bold mt-2">Cloud Native</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-1">Fully managed, secure, and scalable cloud architecture.</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="3" Class="p-6 text-center rounded-xl">
+                    <MudIcon Icon="@Icons.Material.Filled.Bolt" Size="Size.Large" Color="Color.Primary" />
+                    <MudText Typo="Typo.h6" Class="font-bold mt-2">Fast & Reliable</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-1">99.9% uptime with blazing fast performance and analytics.</MudText>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="3" Class="p-6 text-center rounded-xl">
+                    <MudIcon Icon="@Icons.Material.Filled.Security" Size="Size.Large" Color="Color.Primary" />
+                    <MudText Typo="Typo.h6" Class="font-bold mt-2">Enterprise Security</MudText>
+                    <MudText Typo="Typo.body2" Class="mt-1">Top-tier encryption and compliance for your peace of mind.</MudText>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <!-- PRICING SECTION -->
+        <MudText Typo="Typo.h4" Class="mt-16 mb-8 text-center font-bold" id="pricing">Pricing</MudText>
+        <MudGrid Gutter="16" Class="mb-16">
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="1" Class="p-6 text-center rounded-xl">
+                    <MudText Typo="Typo.h6" Class="font-bold">Starter</MudText>
+                    <MudText Typo="Typo.h3" Color="Color.Primary" Class="my-2">$0</MudText>
+                    <MudText Typo="Typo.body2">Basic features<br/>Up to 3 users<br/>Email support</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-4">Choose</MudButton>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="6" Class="p-6 text-center rounded-xl border-2 border-primary">
+                    <MudText Typo="Typo.h6" Class="font-bold">Pro</MudText>
+                    <MudText Typo="Typo.h3" Color="Color.Primary" Class="my-2">$29</MudText>
+                    <MudText Typo="Typo.body2">All features<br/>Up to 25 users<br/>Priority support</MudText>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4">Choose</MudButton>
+                </MudPaper>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudPaper Elevation="1" Class="p-6 text-center rounded-xl">
+                    <MudText Typo="Typo.h6" Class="font-bold">Enterprise</MudText>
+                    <MudText Typo="Typo.h3" Color="Color.Primary" Class="my-2">Contact</MudText>
+                    <MudText Typo="Typo.body2">Custom features<br/>Unlimited users<br/>24/7 support</MudText>
+                    <MudButton Variant="Variant.Outlined" Color="Color.Primary" Class="mt-4">Contact Us</MudButton>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    </MudContainer>
+
+    <MudFooter Class="mt-auto text-center py-6" Elevation="0">
+        <MudText Typo="Typo.body2">© @(DateTime.Now.Year) SaaS Product. All rights reserved.</MudText>
+    </MudFooter>
+</MudLayout>

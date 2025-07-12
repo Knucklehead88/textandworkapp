@@ -1,0 +1,82 @@
+﻿@inject IJSRuntime JS
+@inject IOptions<StripeSettings> StripeSettings
+
+
+<div id="gpay-test-btn"></div>
+@if (!string.IsNullOrEmpty(Result))
+{
+    <div>
+        <h5>Result:</h5>
+        <pre>@Result</pre>
+    </div>
+}
+@code {
+    private string? Result;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var paymentRequest = new
+            {
+                apiVersion = 2,
+                apiVersionMinor = 0,
+                allowedPaymentMethods = new[]
+                {
+                    new {
+                        type = "CARD",
+                        parameters = new {
+                            allowedAuthMethods = new[] { "PAN_ONLY", "CRYPTOGRAM_3DS" },
+                            allowedCardNetworks = new[] { "VISA", "MASTERCARD" }
+                        },
+                        tokenizationSpecification = new {
+                            type = "PAYMENT_GATEWAY",
+                            parameters =  new Dictionary<string, object> {
+                                { "gateway", "stripe" },
+                                // Replace with your Stripe publishable key for testing
+                                {"stripe:publishableKey", StripeSettings.Value.PublishableKey },
+                                {"stripe:version", "2020-08-27" }
+                            }
+                        }
+                    }
+                },
+                merchantInfo = new
+                {
+                    merchantId = "12345678901234567890", // Use your merchant ID (test allowed)
+                    merchantName = "Test Merchant"
+                },
+                transactionInfo = new
+                {
+                    totalPriceStatus = "FINAL",
+                    totalPrice = "1.00",
+                    currencyCode = "USD",
+                    countryCode = "US"
+                }
+            };
+
+            await JS.InvokeVoidAsync(
+                "googlePayInterop.renderButton",
+                "gpay-test-btn",
+                paymentRequest,
+                DotNetObjectReference.Create(this)
+            );
+        }
+    }
+
+    [JSInvokable]
+    public Task OnGooglePaySuccess(object paymentData)
+    {
+        Result = "Success:\n" + paymentData.ToString();
+        StateHasChanged();
+        // In a real app, send paymentData to your backend for processing
+        return Task.CompletedTask;
+    }
+
+    [JSInvokable]
+    public Task OnGooglePayFailure(string error)
+    {
+        Result = "Failed:\n" + error;
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+}

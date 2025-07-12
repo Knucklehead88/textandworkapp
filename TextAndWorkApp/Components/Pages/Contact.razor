@@ -1,0 +1,71 @@
+﻿@page "/contact"
+@inject EmailService EmailService
+
+<h3>Contact Us</h3>
+
+@if (!string.IsNullOrEmpty(SuccessMessage))
+{
+    <div class="alert alert-success">@SuccessMessage</div>
+}
+@if (!string.IsNullOrEmpty(ErrorMessage))
+{
+    <div class="alert alert-danger">@ErrorMessage</div>
+}
+
+<EditForm Model="@formModel" OnValidSubmit="SendEmail">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+    <div class="mb-3">
+        <label>Name:</label>
+        <InputText @bind-Value="formModel.Name" class="form-control" />
+    </div>
+    <div class="mb-3">
+        <label>Email:</label>
+        <InputText @bind-Value="formModel.Email" class="form-control" type="email" />
+    </div>
+    <div class="mb-3">
+        <label>Message:</label>
+        <InputTextArea @bind-Value="formModel.Message" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary">Send</button>
+</EditForm>
+
+@code {
+    private ContactFormModel formModel = new();
+    private string? SuccessMessage;
+    private string? ErrorMessage;
+
+    private async Task SendEmail()
+    {
+        SuccessMessage = ErrorMessage = null;
+
+        try
+        {
+            await EmailService.SendContactEmail(
+                fromName: formModel.Name,
+                fromEmail: formModel.Email,
+                message: formModel.Message,
+                toEmail: formModel.Email
+            );
+
+            SuccessMessage = "Message sent successfully!";
+            formModel = new(); // clear form
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Could not send message: {ex.Message}";
+        }
+    }
+
+    public class ContactFormModel
+    {
+        [Required]
+        public string Name { get; set; } = "";
+
+        [Required, EmailAddress]
+        public string Email { get; set; } = "";
+
+        [Required]
+        public string Message { get; set; } = "";
+    }
+}

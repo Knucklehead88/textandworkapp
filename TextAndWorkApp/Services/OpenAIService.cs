@@ -1,15 +1,21 @@
-﻿using System.Text;
+﻿using System.Net.Http.Headers;
+using System.Text;
 using System.Text.Json;
 
 namespace TextAndWorkApp.Services;
 
-public class OpenAIService(HttpClient httpClient, IConfiguration configuration)
+public class OpenAIService
 {
-    private readonly string _apiKey = configuration["OpenAI:ApiKey"] 
-                                      ?? throw new ArgumentNullException("OpenAI ApiKey not found in configuration");
-    private readonly string _apiUrl = "https://api.openai.com/v1/chat/completions";
+    private readonly HttpClient _httpClient;
+    private readonly string _apiKey;
 
-    public async Task<string> GetCompletionAsync(string prompt)
+    public OpenAIService(IHttpClientFactory httpClientFactory, IConfiguration config)
+    {
+        _httpClient = httpClientFactory.CreateClient();
+        _apiKey = config["OpenAI:ApiKey"];
+    }
+
+    public async Task<string> AskChatGPTAsync(string prompt)
     {
         var requestBody = new
         {
@@ -17,28 +23,18 @@ public class OpenAIService(HttpClient httpClient, IConfiguration configuration)
             messages = new[]
             {
                 new { role = "user", content = prompt }
-            },
-            max_tokens = 1000
+            }
         };
 
-        var content = new StringContent(
-            JsonSerializer.Serialize(requestBody),
-            Encoding.UTF8,
-            "application/json");
+        var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _apiKey);
+        request.Content = new StringContent(JsonSerializer.Serialize(requestBody), Encoding.UTF8, "application/json");
 
-        httpClient.DefaultRequestHeaders.Authorization = 
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
-
-        var response = await httpClient.PostAsync(_apiUrl, content);
+        var response = await _httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
 
-        var responseBody = await response.Content.ReadAsStringAsync();
-        var responseObject = JsonSerializer.Deserialize<JsonElement>(responseBody);
-        
-        return responseObject
-            .GetProperty("choices")[0]
-            .GetProperty("message")
-            .GetProperty("content")
-            .GetString() ?? string.Empty;
+        using var doc = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var result = doc.RootElement.GetProperty("choices")[0].GetProperty("message").GetProperty("content").GetString();
+        return result ?? "No response from ChatGPT.";
     }
 }
